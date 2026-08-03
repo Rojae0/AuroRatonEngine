@@ -6,6 +6,8 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+#include "triangle.h"
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
 
@@ -13,14 +15,8 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); 
 void processInput(GLFWwindow *window);
 
-int SCR_WIDTH = 1280;
-int SCR_HEIGHT = 720;
-
-float edgeFunction(const glm::vec3& a, const glm::vec3& b, const glm::vec3& p)
-{
-    return (p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x);
-}
-
+constexpr int SCR_WIDTH = 1600;
+constexpr int SCR_HEIGHT = 900;
 int main()
 {
 #pragma region Window Setting
@@ -34,7 +30,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "ImGui Test", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "AuroRatonEngine", nullptr, nullptr);
 
     if (!window)
     {
@@ -65,12 +61,32 @@ int main()
 #pragma endregion
     
     std::vector<uint32_t> bf(SCR_WIDTH * SCR_HEIGHT);
-    glm::vec3 vertices[]
+    // 1280x720 해상도 화면 전체에 겹침 없이 넓게 배치된 삼각형 배열
+    custom_triangle triangles[]
     {
-        glm::vec3(-160, -160, 0),
-        glm::vec3(160, -160, 0),
-        glm::vec3(0, 148, 0),
+        // 좌상단 영역 (큼직하고 비대칭적인 삼각형)
+        custom_triangle(glm::vec3(-550, 150, 0), glm::vec3(-250, 300, 0), glm::vec3(-400, 50, 0)),
+        // 우상단 영역 (가로로 길쭉한 형태)
+        custom_triangle(glm::vec3(100, 280, 0), glm::vec3(580, 220, 0), glm::vec3(320, 80, 0)),
+        // 화면 중앙 영역 (세로로 긴 비대칭 형태)
+        custom_triangle(glm::vec3(-150, 120, 0), glm::vec3(150, -50, 0), glm::vec3(-80, -220, 0)),
+        // 좌하단 영역 (넓게 벌어진 형태)
+        custom_triangle(glm::vec3(-580, -100, 0), glm::vec3(-220, -320, 0), glm::vec3(-500, -300, 0)),
+        // 우하단 영역 (크고 뾰족한 형태)
+        custom_triangle(glm::vec3(200, -150, 0), glm::vec3(550, -120, 0), glm::vec3(400, -330, 0)),
+        
+        custom_triangle(glm::vec3(250, -240, 0), glm::vec3(350, -240, 0), glm::vec3(300, -100, 0))
     };
+    
+    glm::vec2 min_p = glm::vec2();
+    glm::vec2 max_p = glm::vec2();
+    for (custom_triangle triangle : triangles)
+    {
+        min_p.x = glm::min(min_p.x, triangle.get_minx());
+        min_p.y = glm::min(min_p.y, triangle.get_miny());
+        max_p.x = glm::max(max_p.x, triangle.get_maxx());
+        max_p.y = glm::max(max_p.y, triangle.get_maxy());
+    }
     
     //p % width, p / width
     for (int i = 0; i < bf.size(); i++)
@@ -80,13 +96,28 @@ int main()
 
         glm::vec3 point(pixelX - SCR_WIDTH / 2, SCR_HEIGHT / 2 - pixelY, 0);
         
-        float c1 = glm::cross(vertices[1] - vertices[0], point - vertices[0]).z;
-        float c2 = glm::cross(vertices[2] - vertices[1], point - vertices[1]).z;
-        float c3 = glm::cross(vertices[0] - vertices[2], point - vertices[2]).z;
+        if (point.x < min_p.x || point.y < min_p.y || point.x > max_p.x || point.y > max_p.y) continue;
         
-        if (c1 >= 0.f && c2 >= 0.f && c3 >= 0.f)
+        for (const auto& triangle : triangles)
         {
-            bf[i] = 0xffffffff;
+            float c1 = custom_triangle(triangle.p1, triangle.p2, point).cross().z;
+            float c2 = custom_triangle(triangle.p2, triangle.p3, point).cross().z;
+            float c3 = custom_triangle(triangle.p3, triangle.p1, point).cross().z;
+
+            if ((c1 >= 0.f && c2 >= 0.f && c3 >= 0.f) || (c1 <= 0.f && c2 <= 0.f && c3 <= 0.f))
+            {
+                float area = custom_triangle(triangle.p1, triangle.p2, triangle.p3).cross().z;
+
+                float w1 = c1 / area;
+                float w2 = c2 / area;
+                float w3 = c3 / area;
+                
+                uint32_t r = static_cast<uint32_t>(w1 * 255.0f);
+                uint32_t g = static_cast<uint32_t>(w2 * 255.0f);
+                uint32_t b = static_cast<uint32_t>(w3 * 255.0f);
+                
+                bf[i] = 255 << 24 | b << 16 | g << 8 | r;
+            }
         }
     }
     
@@ -107,7 +138,7 @@ int main()
         ImGui::NewFrame();
         
         ImGui::Begin("Framebuffer");
-        ImGui::Image((ImTextureID)(intptr_t)tex, ImVec2(SCR_WIDTH, SCR_HEIGHT));
+        ImGui::Image((ImTextureID)(intptr_t)tex, ImVec2(1280, 720));
         ImGui::End();
         
         ImGui::Render();

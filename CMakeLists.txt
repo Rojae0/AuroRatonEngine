@@ -14,6 +14,7 @@ find_package(OpenGL REQUIRED)
 add_executable(AuroRatonEngine
     src/main.cpp
         src/main.cpp
+        src/triangle.h
 )
 
 target_link_libraries(AuroRatonEngine PRIVATE

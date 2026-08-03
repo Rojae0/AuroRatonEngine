@@ -41,6 +41,8 @@ CMakeUserPresets.json
 **/.idea/**/contentModel.xml
 **/.idea/**/modules.xml
 **/.idea/**/.idea
+.idea/
+**/.idea/
 
 *.suo
 *.user

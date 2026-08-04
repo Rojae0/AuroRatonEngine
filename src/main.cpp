@@ -15,6 +15,8 @@ void processInput(GLFWwindow *window);
 
 constexpr int SCR_WIDTH = 1600;
 constexpr int SCR_HEIGHT = 900;
+constexpr float PI = 3.1415926535f;
+
 int main()
 {
     InitRenderDoc();
@@ -60,27 +62,47 @@ int main()
     
     Shader shader("D:/01_Develope/CPP/AuroRatonEngine/src/shaders/Vert/vert.vsh", "D:/01_Develope/CPP/AuroRatonEngine/src/shaders/Frag/frag.fsh");
     
-    float vertices[] = 
+    float vertices[] =
     {
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-         0.0f,  0.5f, 0.0f
+        // x, y
+        -1.0f, -1.0f,
+         1.0f, -1.0f,
+         1.0f,  1.0f,
+
+        -1.0f, -1.0f,
+         1.0f,  1.0f,
+        -1.0f,  1.0f
+    };
+
+    GLuint vao, vbo;
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    glEnableVertexAttribArray(0);
+    
+    glm::vec2 centres[]
+    {
+        glm::vec2(-180, 180),
+        glm::vec2(60, -180),
+        glm::vec2(30, 20),
+        glm::vec2(240, 50),
+        glm::vec2(-240, -180),
+        glm::vec2(-60, 136),
     };
     
-    unsigned int VBO, VAO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    float radius[]
+    {
+        13.0f, 20.0f, 50.0f, 63.0f, 55.0f , 34.0f
+    };
     
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0); 
-
-   glBindVertexArray(0);
-   
-    
+    shader.use();
+    shader.setVec2("uCenters", 6, centres);
+    shader.setFloat("uRadius", 6, radius);
     
     while (!glfwWindowShouldClose(window))
     {
@@ -100,8 +122,8 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
         
         shader.use();
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES,0, 3);
+        glBindVertexArray(vao);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

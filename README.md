@@ -7,5 +7,6 @@ GLFW
 GLAD
 GLM
 ImGUI(GLFW, OpenGL)
-
-d
+RenderDoc
+Assimp
+stb_image

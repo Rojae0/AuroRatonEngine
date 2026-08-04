@@ -21,6 +21,7 @@ add_executable(AuroRatonEngine
         src/utility/Shader.cpp
         src/utility/stb_image.cpp
         src/utility/Renderdoc.cpp
+        src/utility/Util.h
 )
 
 target_link_libraries(AuroRatonEngine PRIVATE

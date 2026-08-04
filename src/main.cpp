@@ -9,6 +9,7 @@
 #include "utility/Model.h"
 #include "utility/Renderdoc.h"
 #include "utility/Shader.h"
+#include "utility/Util.h"
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); 
@@ -16,7 +17,6 @@ void processInput(GLFWwindow *window);
 
 constexpr int SCR_WIDTH = 1600;
 constexpr int SCR_HEIGHT = 900;
-constexpr float PI = 3.1415926535f;
 
 int main()
 {
@@ -63,33 +63,10 @@ int main()
     
     glEnable(GL_DEPTH_TEST);
     
-    Shader modelShader("D:/01_Develope/CPP/AuroRatonEngine/src/shaders/Vert/model.vsh", "D:/01_Develope/CPP/AuroRatonEngine/src/shaders/Frag/model.fsh");
+    Shader modelShader(PathUtils::MakeAbsPath("src/shaders/vert/model.vsh"), PathUtils::MakeAbsPath("src/shaders/frag/model.fsh"));
     
-    float vertices[] =
-    {
-        // x, y
-        -1.0f, -1.0f,
-         1.0f, -1.0f,
-         1.0f,  1.0f,
-
-        -1.0f, -1.0f,
-         1.0f,  1.0f,
-        -1.0f,  1.0f
-    };
-
-    GLuint vao, vbo;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-    glEnableVertexAttribArray(0);
-    
-    Model m("D:/01_Develope/CPP/AuroRatonEngine/model/dinosaur_obj/source/triceratops.obj");
-    //Model m("D:/01_Develope/CPP/AuroRatonEngine/model/for my baby.obj");
+    Model m(PathUtils::MakeAbsPath("model/dinosaur_obj/source/triceratops.obj"));
+    //Model m("D:/01_Develop/CPP/AuroRatonEngine/model/for my baby.obj");
     
     while (!glfwWindowShouldClose(window))
     {
@@ -111,7 +88,7 @@ int main()
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::rotate(model, (float)glfwGetTime() * glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         glm::mat4 view = glm::lookAt(
-            glm::vec3(0, 10, 10),   // 카메라 위치
+            glm::vec3(0, 2, 10),   // 카메라 위치
             glm::vec3(0, 0, 0),   // 바라보는 지점
             glm::vec3(0, 1, 0)    // up 벡터
         );

@@ -10,8 +10,8 @@ RENDERDOC_API_1_1_2* g_rdocApi = nullptr;
 bool InitRenderDoc()
 {
     // RenderDoc이 설치된 경로의 DLL을 로드하거나, 프로젝트 폴더에 복사한 DLL을 로드합니다.
-
     HMODULE mod = LoadLibraryA("renderdoc.dll");
+
     if (!mod)
     {
         // 기본 설치 경로 예시 (필요시 경로 수정)
@@ -21,12 +21,15 @@ bool InitRenderDoc()
     if (mod)
     {
         pRENDERDOC_GetAPI getAPI = reinterpret_cast<pRENDERDOC_GetAPI>(GetProcAddress(mod, "RENDERDOC_GetAPI"));
+
         if (getAPI)
         {
             int ret = getAPI(eRENDERDOC_API_Version_1_1_2, (void**)&g_rdocApi);
+
             return (ret == 1);
         }
     }
+
     return false;
 }
 

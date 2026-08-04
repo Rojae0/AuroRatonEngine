@@ -6,9 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/norm.hpp>
-
+#include "utility/Renderdoc.h"
 #include "utility/Shader.h"
 
 
@@ -19,6 +17,8 @@ constexpr int SCR_WIDTH = 1600;
 constexpr int SCR_HEIGHT = 900;
 int main()
 {
+    InitRenderDoc();
+    
 #pragma region Window Setting
     if (!glfwInit())
     {
@@ -42,7 +42,7 @@ int main()
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
     {
         std::cout << "GLAD Init Failed\n";
         return -1;
@@ -58,7 +58,7 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330");
 #pragma endregion
     
-    Shader shader("D:/01_Develope/CPP/AuroRatonEngine/src/Vert/vert.vsh", "D:/01_Develope/CPP/AuroRatonEngine/src/Frag/frag.fsh");
+    Shader shader("D:/01_Develope/CPP/AuroRatonEngine/src/shaders/Vert/vert.vsh", "D:/01_Develope/CPP/AuroRatonEngine/src/shaders/Frag/frag.fsh");
     
     float vertices[] = 
     {
@@ -92,6 +92,7 @@ int main()
         ImGui::NewFrame();
         
         //imgui 옵션
+        RenderImGuiRenderDocMenu();
         
         ImGui::Render();
 

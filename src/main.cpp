@@ -6,10 +6,10 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
-#include "triangle.h"
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
+
+#include "utility/Shader.h"
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); 
@@ -48,8 +48,6 @@ int main()
         return -1;
     }
 
-    std::cout << "OpenGL Version : " << glGetString(GL_VERSION) << std::endl;
-
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
@@ -60,73 +58,29 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330");
 #pragma endregion
     
-    std::vector<uint32_t> bf(SCR_WIDTH * SCR_HEIGHT);
-    // 1280x720 해상도 화면 전체에 겹침 없이 넓게 배치된 삼각형 배열
-    custom_triangle triangles[]
+    Shader shader("D:/01_Develope/CPP/AuroRatonEngine/src/Vert/vert.vsh", "D:/01_Develope/CPP/AuroRatonEngine/src/Frag/frag.fsh");
+    
+    float vertices[] = 
     {
-        // 좌상단 영역 (큼직하고 비대칭적인 삼각형)
-        custom_triangle(glm::vec3(-550, 150, 0), glm::vec3(-250, 300, 0), glm::vec3(-400, 50, 0)),
-        // 우상단 영역 (가로로 길쭉한 형태)
-        custom_triangle(glm::vec3(100, 280, 0), glm::vec3(580, 220, 0), glm::vec3(320, 80, 0)),
-        // 화면 중앙 영역 (세로로 긴 비대칭 형태)
-        custom_triangle(glm::vec3(-150, 120, 0), glm::vec3(150, -50, 0), glm::vec3(-80, -220, 0)),
-        // 좌하단 영역 (넓게 벌어진 형태)
-        custom_triangle(glm::vec3(-580, -100, 0), glm::vec3(-220, -320, 0), glm::vec3(-500, -300, 0)),
-        // 우하단 영역 (크고 뾰족한 형태)
-        custom_triangle(glm::vec3(200, -150, 0), glm::vec3(550, -120, 0), glm::vec3(400, -330, 0)),
-        
-        custom_triangle(glm::vec3(250, -240, 0), glm::vec3(350, -240, 0), glm::vec3(300, -100, 0))
+        -0.5f, -0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+         0.0f,  0.5f, 0.0f
     };
     
-    glm::vec2 min_p = glm::vec2();
-    glm::vec2 max_p = glm::vec2();
-    for (custom_triangle triangle : triangles)
-    {
-        min_p.x = glm::min(min_p.x, triangle.get_minx());
-        min_p.y = glm::min(min_p.y, triangle.get_miny());
-        max_p.x = glm::max(max_p.x, triangle.get_maxx());
-        max_p.y = glm::max(max_p.y, triangle.get_maxy());
-    }
+    unsigned int VBO, VAO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
     
-    //p % width, p / width
-    for (int i = 0; i < bf.size(); i++)
-    {
-        int pixelX = i % SCR_WIDTH;
-        int pixelY = i / SCR_WIDTH;
-
-        glm::vec3 point(pixelX - SCR_WIDTH / 2, SCR_HEIGHT / 2 - pixelY, 0);
-        
-        if (point.x < min_p.x || point.y < min_p.y || point.x > max_p.x || point.y > max_p.y) continue;
-        
-        for (const auto& triangle : triangles)
-        {
-            float c1 = custom_triangle(triangle.p1, triangle.p2, point).cross().z;
-            float c2 = custom_triangle(triangle.p2, triangle.p3, point).cross().z;
-            float c3 = custom_triangle(triangle.p3, triangle.p1, point).cross().z;
-
-            if ((c1 >= 0.f && c2 >= 0.f && c3 >= 0.f) || (c1 <= 0.f && c2 <= 0.f && c3 <= 0.f))
-            {
-                float area = custom_triangle(triangle.p1, triangle.p2, triangle.p3).cross().z;
-
-                float w1 = c1 / area;
-                float w2 = c2 / area;
-                float w3 = c3 / area;
-                
-                uint32_t r = static_cast<uint32_t>(w1 * 255.0f);
-                uint32_t g = static_cast<uint32_t>(w2 * 255.0f);
-                uint32_t b = static_cast<uint32_t>(w3 * 255.0f);
-                
-                bf[i] = 255 << 24 | b << 16 | g << 8 | r;
-            }
-        }
-    }
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     
-    uint32_t tex;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, bf.data());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0); 
+
+   glBindVertexArray(0);
+   
+    
     
     while (!glfwWindowShouldClose(window))
     {
@@ -137,14 +91,16 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         
-        ImGui::Begin("Framebuffer");
-        ImGui::Image((ImTextureID)(intptr_t)tex, ImVec2(1280, 720));
-        ImGui::End();
+        //imgui 옵션
         
         ImGui::Render();
 
         glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+        
+        shader.use();
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES,0, 3);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

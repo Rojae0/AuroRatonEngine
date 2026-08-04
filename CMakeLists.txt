@@ -15,6 +15,8 @@ add_executable(AuroRatonEngine
     src/main.cpp
         src/main.cpp
         src/triangle.h
+        src/Shader.h
+        src/Shader.cpp
 )
 
 target_link_libraries(AuroRatonEngine PRIVATE

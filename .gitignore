@@ -44,6 +44,8 @@ CMakeUserPresets.json
 .idea/
 **/.idea/
 
+**/model/
+
 *.suo
 *.user
 .vs/

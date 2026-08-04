@@ -3,12 +3,12 @@
 #include <string>
 #include <vector>
 
+
+#include "Mesh.h"
 #include "shader.h"
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"
 
-class Mesh;
-struct Texture;
 
 unsigned int TextureFromFile(const char *path, const std::string &directory, bool gamma = false);
 
@@ -21,7 +21,7 @@ public:
     std::string directory;
     bool gammaCorrection;
 
-    Model(std::string const &path, bool gamma);
+    Model(std::string const &path, bool gamma = false);
     void Draw(Shader &shader);
     
 private:

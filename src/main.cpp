@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+#include "utility/Model.h"
 #include "utility/Renderdoc.h"
 #include "utility/Shader.h"
 
@@ -60,7 +61,9 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330");
 #pragma endregion
     
-    Shader shader("D:/01_Develope/CPP/AuroRatonEngine/src/shaders/Vert/vert.vsh", "D:/01_Develope/CPP/AuroRatonEngine/src/shaders/Frag/frag.fsh");
+    glEnable(GL_DEPTH_TEST);
+    
+    Shader modelShader("D:/01_Develope/CPP/AuroRatonEngine/src/shaders/Vert/model.vsh", "D:/01_Develope/CPP/AuroRatonEngine/src/shaders/Frag/model.fsh");
     
     float vertices[] =
     {
@@ -85,24 +88,8 @@ int main()
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
     
-    glm::vec2 centres[]
-    {
-        glm::vec2(-180, 180),
-        glm::vec2(60, -180),
-        glm::vec2(30, 20),
-        glm::vec2(240, 50),
-        glm::vec2(-240, -180),
-        glm::vec2(-60, 136),
-    };
-    
-    float radius[]
-    {
-        13.0f, 20.0f, 50.0f, 63.0f, 55.0f , 34.0f
-    };
-    
-    shader.use();
-    shader.setVec2("uCenters", 6, centres);
-    shader.setFloat("uRadius", 6, radius);
+    Model m("D:/01_Develope/CPP/AuroRatonEngine/model/dinosaur_obj/source/triceratops.obj");
+    //Model m("D:/01_Develope/CPP/AuroRatonEngine/model/for my baby.obj");
     
     while (!glfwWindowShouldClose(window))
     {
@@ -119,11 +106,27 @@ int main()
         ImGui::Render();
 
         glClearColor(0.2f, 0.3f, 0.4f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        shader.use();
-        glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::rotate(model, (float)glfwGetTime() * glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 view = glm::lookAt(
+            glm::vec3(0, 10, 10),   // 카메라 위치
+            glm::vec3(0, 0, 0),   // 바라보는 지점
+            glm::vec3(0, 1, 0)    // up 벡터
+        );
+        glm::mat4 projection = glm::perspective(
+            glm::radians(45.0f),
+            (float)SCR_WIDTH / (float)SCR_HEIGHT,
+            0.1f, 100.0f
+        );
+
+        modelShader.use();
+        modelShader.setMat4("model", model);
+        modelShader.setMat4("view", view);
+        modelShader.setMat4("projection", projection);
+        m.Draw(modelShader);
+        
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

@@ -2,13 +2,12 @@
 
 #include <iostream>
 
-#include "Mesh.h"
 #include "stb_image.h"
 #include "assimp/postprocess.h"
 
 using namespace std;
 
-Model::Model(string const& path, bool gamma = false) : gammaCorrection(gamma)
+Model::Model(string const& path, bool gamma) : gammaCorrection(gamma)
 {
     loadModel(path);
 }
@@ -96,6 +95,9 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
             vertex.TexCoords = glm::vec2(0.0f, 0.0f);
 
         vertices.push_back(vertex);
+        
+        if (i < 10)
+            std::cout << vector.x << ", " << vector.y << std::endl;
     }
     
     for (unsigned int i = 0; i < mesh->mNumFaces; i++)
